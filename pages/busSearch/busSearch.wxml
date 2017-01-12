@@ -1,0 +1,17 @@
+<view class="section">
+  <view class="section__title">Bus Service No.</view>
+  <picker bindchange="bindBusServiceNoChange" value="{{numIndex}}" range="{{busServiceNoArray}}">
+    <view class="picker">
+      当前选择：{{busServiceNoArray[numIndex]}}
+    </view>
+  </picker>
+</view>
+
+<view class="section" wx:if="{{directionDropdownShowFlag}}">
+  <view class="section__title">Bus Service No.</view>
+  <picker bindchange="bindBusDirectionChange" value="{{directionIndex}}" range="{{busDirectionArray}}">
+    <view class="picker">
+      当前选择：{{busDirectionArray[directionIndex]}}
+    </view>
+  </picker>
+</view>
