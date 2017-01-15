@@ -2,6 +2,7 @@
   "pages": [
     "pages/favorite/favorite",
     "pages/busSearch/busSearch",
+    "pages/busSearch/busTime",
     "pages/index/index",
     "pages/logs/logs"
   ],

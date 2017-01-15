@@ -37,6 +37,18 @@ App({
     })
   },
 
+  showLoadingWindow: function(){
+    wx.showToast({
+      title: '加载中',
+      icon: 'loading',
+      duration: 10000
+    });
+  },
+
+  hideLoadingWindow: function(){
+    wx.hideToast();
+  },
+
   globalData:{
     userInfo:null
   }
