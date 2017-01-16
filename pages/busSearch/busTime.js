@@ -79,7 +79,9 @@ Page({
         'w': '58',
         'x': '59',
         '-': '-'
-    }
+    },
+    // busTime:{busNo,firstNextTime,secondNextTime}
+    busTimeArray: []
   },
   onLoad: function (options) {
     app.showLoadingWindow();
@@ -96,20 +98,58 @@ Page({
         wx.request({
           url: "https://s3-ap-southeast-1.amazonaws.com/lta-ntp-web/utctime.txt",
           success: function(res1) {
-            var ntpData = res1.data;
+            var ntpDataTemp = res1.data;
             //etaDataTemp = "etaCallback(['20170115164540])'...";
             var etaDataStr = etaDataTemp.substring(13);
-            console.log("last 字符:----"+etaDataStr[etaDataStr.length-1]);
             etaDataStr = etaDataStr.substring(0,etaDataStr.length- 3);
             var etaData = etaDataStr.split(",");
+            
+            var ntpDataStr = ntpDataTemp.substring(13);
+            var ntpData = ntpDataStr.substring(0,ntpDataStr.length- 3);
 
             var lastUpdated = hooks('20170115172840', 'YYYYMMDDHHmmss')._d;
             console.log("lastUpdated:"+lastUpdated);
 
             var busArrivalTimes = that.parseBusArrivalTime(etaData[1]);
-            // that.setData({
-            //   busServiceNoArray:res.data
-            // })
+            var busStopId = options.busStopId;
+            var busServiceId = options.busNo;
+            
+			      var at = ['N.A.', 'N.A.'];
+        	  var ol = ['', ''];
+        	  var wc = ['', ''];
+        	
+        	  var selectedArrivals = [];
+        	
+            if (busArrivalTimes[busStopId] != null && busArrivalTimes[busStopId][busServiceId] != null) {
+            	var busArrivalTime = busArrivalTimes[busStopId][busServiceId];
+				
+            	for (var i = 0; i < busArrivalTime.length && selectedArrivals.length < 2; i++) {
+            		if (busArrivalTime[i].arrivalTime != '-') {
+	            		busArrivalTime[i].arrivalTime = that.calculateArrivalMinites(busArrivalTime[i].arrivalTime, ntpData);
+	            		if (busArrivalTime[i].arrivalTime >= 0) {
+	            			selectedArrivals.push(busArrivalTime[i]);
+	            		}
+            		}
+            	} 
+          	
+            if (selectedArrivals.length > 0) {
+
+          		at[0] = selectedArrivals[0].arrivalTime == '0' ? 'Arr' : selectedArrivals[0].arrivalTime + ' min';
+        			ol[0] = selectedArrivals[0].occupancyLevel;
+        			wc[0] = selectedArrivals[0].wheelchair;
+        			if (selectedArrivals.length > 1) {
+        				at[1] = selectedArrivals[1].arrivalTime == '0' ? 'Arr' : selectedArrivals[1].arrivalTime + ' min';
+          			ol[1] = selectedArrivals[1].occupancyLevel;
+          			wc[1] = selectedArrivals[1].wheelchair;
+        			}
+            }
+          }
+            
+            console.log("busTimeArray:--"+selectedArrivals);
+            var busTime = {busServiceId:busServiceId,firstNextTime:at[0],secondNextTime:at[1]};
+            that.setData({
+              busTimeArray:[busTime]
+            });
             app.hideLoadingWindow();
           }
         })
@@ -171,7 +211,7 @@ Page({
                 var busServiceArr = busArrivalText.split(':');
                 var busServiceId = busServiceArr[0];
                 var busArrivalTimeText = busServiceArr[1];
-                busArrivalTimes[busStopId][busServiceId] = busArrivalTimeDecode(busArrivalTimeText);
+                busArrivalTimes[busStopId][busServiceId] = this.busArrivalTimeDecode(busArrivalTimeText);
             }
         }
       }
@@ -180,7 +220,7 @@ Page({
   },
 
   calculateArrivalMinites: function (arrivalTime, currentTime) {
-    return parseInt(moment(arrivalTime).diff(moment(currentTime)) / 1000 / 60);
+    return parseInt(hooks(arrivalTime).diff(hooks(currentTime)) / 1000 / 60);
   }
 
 
