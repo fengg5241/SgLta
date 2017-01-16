@@ -4,6 +4,7 @@ Page({
   data: {
     directionDropdownShowFlag: false,
     busStopDropdownShowFlag:false,
+    inputBusStopId:null,
     numIndex:0,
     directionIndex:0,
     stopIndex:0,
@@ -13,6 +14,12 @@ Page({
     busStopArray:[],// 得有一个存储原始对象array变量，用来再查询的时候根据index取得stopid
     busStopDisplayArray:[]// 因为要显示id-stopName 这个形式 所以专门新建一个数组用来显示
   },
+  bindKeyInput: function (e) {
+    this.setData({
+      inputBusStopId: e.detail.value
+    })
+  },
+
   //event function start
   bindBusServiceNoChange: function(e) {
     this.setData({

@@ -1,6 +1,23 @@
 <view class="container">
 
   <view class="page-body">
+
+    <view class="page-section">
+      <view class="weui-cells__title">Bus Stop Code</view>
+      <view class="weui-cells weui-cells_after-title">
+        <view class="weui-cell weui-cell_input">
+          <view class="weui-cell__bd">
+            <input class="weui-input"  bindinput="bindKeyInput" placeholder="please input and click submit"/>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="page-head">
+      <view class="page-head-title">or</view>
+    </view>
+
+
     <view class="page-section">
       <view class="weui-cells__title">Bus Service No.</view>
       <view class="weui-cells weui-cells_after-title">
