@@ -85,12 +85,74 @@ Page({
   },
   onLoad: function (options) {
     app.showLoadingWindow();
-    var that = this;
     // 动态显示title根据stop name
-    wx.setNavigationBarTitle({
-      title:options.busStopDesc
+    if(options.busStopDesc != null){
+      wx.setNavigationBarTitle({
+        title:options.busStopDesc
+      });
+    }
+
+
+    this.getBusArrivalTime(options.busStopId,options.busStopDesc,options.busServiceId);
+  },
+  kindToggle: function (e) {
+    var id = e.currentTarget.id, list = this.data.list;
+    for (var i = 0, len = list.length; i < len; ++i) {
+      if (list[i].id == id) {
+        list[i].open = !list[i].open
+      } else {
+        list[i].open = false
+      }
+    }
+    this.setData({
+      list: list
+    });
+  },
+
+  refreshBusTime: function (e){
+    console.log(e);
+  },
+
+  getBusArrivalTime: function (busStopId,busStopDesc,busServiceId){
+    var isSingleBus = busServiceId != null;
+    var url = 'https://www.mytransport.sg/content/mytransport/home/myconcierge/busarrivaltime/jcr:content/par/bus_arrival_time.getBusStop?query=' + busStopId;
+    if (isSingleBus) {
+      url += "_" + busServiceId;
+    }
+
+    var that = this;
+    wx.request({
+      url: url,
+      success: function(res) {
+        var busArray = res.data.buses;
+        if(busArray != null){
+          wx.setNavigationBarTitle({
+            title:res.data.busStopDescription
+          });
+
+          // Make bus service is unique 
+          var busServiceIdArray = [];
+          for (var i = 0; i < busArray.length; i++) {
+            if(busServiceIdArray.indexOf(busArray[i]) < 0){ 
+              busServiceIdArray.push(busArray[i]);
+            }
+          }
+          that.updateBusArrivalTime(busStopId,busServiceIdArray);
+        }else {
+          wx.setNavigationBarTitle({
+            title:"Unknown Stop"
+          });
+
+          app.hideLoadingWindow();
+        }
+
+      }
     });
 
+  },
+
+  updateBusArrivalTime: function (busStopId,busServiceIdArray){
+    var that = this;
     wx.request({
       url: "https://s3-ap-southeast-1.amazonaws.com/lta-eta-web-2/bus_arrival.baf2.js",
       success: function(res) {
@@ -107,48 +169,55 @@ Page({
             var ntpDataStr = ntpDataTemp.substring(13);
             var ntpData = ntpDataStr.substring(0,ntpDataStr.length- 3);
 
-            var lastUpdated = hooks('20170115172840', 'YYYYMMDDHHmmss')._d;
-            console.log("lastUpdated:"+lastUpdated);
+            //var lastUpdated = hooks('20170115172840', 'YYYYMMDDHHmmss')._d;
 
             var busArrivalTimes = that.parseBusArrivalTime(etaData[1]);
-            var busStopId = options.busStopId;
-            var busServiceId = options.busNo;
             
-			      var at = ['N.A.', 'N.A.'];
-        	  var ol = ['', ''];
-        	  var wc = ['', ''];
-        	
-        	  var selectedArrivals = [];
-        	
-            if (busArrivalTimes[busStopId] != null && busArrivalTimes[busStopId][busServiceId] != null) {
-            	var busArrivalTime = busArrivalTimes[busStopId][busServiceId];
-				
-            	for (var i = 0; i < busArrivalTime.length && selectedArrivals.length < 2; i++) {
-            		if (busArrivalTime[i].arrivalTime != '-') {
-	            		busArrivalTime[i].arrivalTime = that.calculateArrivalMinites(busArrivalTime[i].arrivalTime, ntpData);
-	            		if (busArrivalTime[i].arrivalTime >= 0) {
-	            			selectedArrivals.push(busArrivalTime[i]);
-	            		}
-            		}
-            	} 
-          	
-            if (selectedArrivals.length > 0) {
 
-          		at[0] = selectedArrivals[0].arrivalTime == '0' ? 'Arr' : selectedArrivals[0].arrivalTime + ' min';
-        			ol[0] = selectedArrivals[0].occupancyLevel;
-        			wc[0] = selectedArrivals[0].wheelchair;
-        			if (selectedArrivals.length > 1) {
-        				at[1] = selectedArrivals[1].arrivalTime == '0' ? 'Arr' : selectedArrivals[1].arrivalTime + ' min';
-          			ol[1] = selectedArrivals[1].occupancyLevel;
-          			wc[1] = selectedArrivals[1].wheelchair;
-        			}
-            }
-          }
+          
             
-            console.log("busTimeArray:--"+selectedArrivals);
-            var busTime = {busServiceId:busServiceId,firstNextTime:at[0],secondNextTime:at[1]};
+            var busTimeTempArray = [];
+            if(busArrivalTimes[busStopId] != null){
+              for (var i = 0; i < busServiceIdArray.length; i++) {
+                var busServiceId = busServiceIdArray[i];
+
+                var at = ['N.A.', 'N.A.'];
+                var ol = ['', ''];
+                var wc = ['', ''];
+                if (busArrivalTimes[busStopId][busServiceId] != null) {
+                  var busArrivalTime = busArrivalTimes[busStopId][busServiceId];
+                  var selectedArrivals = [];
+                  for (var j = 0; j < busArrivalTime.length && selectedArrivals.length < 2; j++) {
+                    if (busArrivalTime[j].arrivalTime != '-') {
+                      busArrivalTime[j].arrivalTime = that.calculateArrivalMinites(busArrivalTime[j].arrivalTime, ntpData);
+                      if (busArrivalTime[j].arrivalTime >= 0) {
+                        selectedArrivals.push(busArrivalTime[j]);
+                      }
+                    }
+                  } 
+                
+                  if (selectedArrivals.length > 0) {
+                    at[0] = selectedArrivals[0].arrivalTime == '0' ? 'Arr' : selectedArrivals[0].arrivalTime + ' min';
+                    ol[0] = selectedArrivals[0].occupancyLevel;
+                    wc[0] = selectedArrivals[0].wheelchair;
+                    if (selectedArrivals.length > 1) {
+                      at[1] = selectedArrivals[1].arrivalTime == '0' ? 'Arr' : selectedArrivals[1].arrivalTime + ' min';
+                      ol[1] = selectedArrivals[1].occupancyLevel;
+                      wc[1] = selectedArrivals[1].wheelchair;
+                    }
+                  }
+
+                  console.log("busTimeArray:--"+selectedArrivals);
+
+
+                }
+                var busTime = {busServiceId:busServiceId,firstNextTime:at[0],secondNextTime:at[1]};
+                busTimeTempArray.push(busTime);
+              }
+            }
+
             that.setData({
-              busTimeArray:[busTime]
+              busTimeArray:busTimeTempArray
             });
             app.hideLoadingWindow();
           }
@@ -159,19 +228,6 @@ Page({
         // })
       }
     })
-  },
-  kindToggle: function (e) {
-    var id = e.currentTarget.id, list = this.data.list;
-    for (var i = 0, len = list.length; i < len; ++i) {
-      if (list[i].id == id) {
-        list[i].open = !list[i].open
-      } else {
-        list[i].open = false
-      }
-    }
-    this.setData({
-      list: list
-    });
   },
 
   busArrivalTimeDecode: function (timeText) {

@@ -70,7 +70,7 @@
 
 
     <view class="btn-area" id="buttonContainer">
-      <button type="primary" bindtap="submit">submit</button>
+      <button type="primary" bindtap="submit" disabled="{{submitDisabled}}">submit</button>
     </view>
 
 

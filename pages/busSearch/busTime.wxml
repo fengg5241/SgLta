@@ -11,7 +11,7 @@
             <view class="kind-list-text">{{(item.busServiceId)}}</view>
             <view class="kind-list-text">{{(item.firstNextTime)}}</view>
             <view class="kind-list-text">{{(item.secondNextTime)}}</view>
-            <image class="kind-list-img" src="../../image/refresh.png"></image>
+            <image class="kind-list-img" src="../../image/refresh.png" data-busserviceid="{{item.busServiceId}}" bindtap="refreshBusTime"></image>
           </view>
 
           
