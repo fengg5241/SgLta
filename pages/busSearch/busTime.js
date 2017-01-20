@@ -81,19 +81,28 @@ Page({
         '-': '-'
     },
     // busTime:{busNo,firstNextTime,secondNextTime}
+    currentStopId:null,
+    currentStopDesc:"",
     busTimeArray: []
   },
   onLoad: function (options) {
-    app.showLoadingWindow();
+    
+    this.setData({
+      currentStopId: options.busStopId
+    });
     // 动态显示title根据stop name
     if(options.busStopDesc != null){
       wx.setNavigationBarTitle({
         title:options.busStopDesc
       });
+
+      this.setData({
+        currentStopDesc: options.busStopDesc
+      });
     }
 
 
-    this.getBusArrivalTime(options.busStopId,options.busStopDesc,options.busServiceId);
+    this.getBusArrivalTime(options.busStopId,options.busStopDesc,options.busServiceId,true);
   },
   kindToggle: function (e) {
     var id = e.currentTarget.id, list = this.data.list;
@@ -110,44 +119,55 @@ Page({
   },
 
   refreshBusTime: function (e){
-    console.log(e);
+    var currentBusServiceId = e.currentTarget.dataset.busserviceid;
+    this.getBusArrivalTime(this.data.currentStopId,this.data.currentStopDesc,currentBusServiceId,false);
   },
 
-  getBusArrivalTime: function (busStopId,busStopDesc,busServiceId){
-    var isSingleBus = busServiceId != null;
-    var url = 'https://www.mytransport.sg/content/mytransport/home/myconcierge/busarrivaltime/jcr:content/par/bus_arrival_time.getBusStop?query=' + busStopId;
-    if (isSingleBus) {
-      url += "_" + busServiceId;
-    }
-
+  getBusArrivalTime: function (busStopId,busStopDesc,busServiceId,searchLocationFlag){
+    app.showLoadingWindow();
     var that = this;
-    wx.request({
-      url: url,
-      success: function(res) {
-        var busArray = res.data.buses;
-        if(busArray != null){
-          wx.setNavigationBarTitle({
-            title:res.data.busStopDescription
-          });
-
-          // Make bus service is unique 
-          var busServiceIdArray = [];
-          for (var i = 0; i < busArray.length; i++) {
-            if(busServiceIdArray.indexOf(busArray[i]) < 0){ 
-              busServiceIdArray.push(busArray[i]);
-            }
-          }
-          that.updateBusArrivalTime(busStopId,busServiceIdArray);
-        }else {
-          wx.setNavigationBarTitle({
-            title:"Unknown Stop"
-          });
-
-          app.hideLoadingWindow();
+    if(!searchLocationFlag){
+      if(busServiceId != null){
+        that.updateBusArrivalTime(busStopId,[busServiceId]);
+      }
+    } else {
+        var isSingleBus = busServiceId != null;
+        var url = 'https://www.mytransport.sg/content/mytransport/home/myconcierge/busarrivaltime/jcr:content/par/bus_arrival_time.getBusStop?query=' + busStopId;
+        if (isSingleBus) {
+          url += "_" + busServiceId;
         }
 
-      }
-    });
+        wx.request({
+          url: url,
+          success: function(res) {
+            var busArray = res.data.buses;
+            if(busArray != null){
+              wx.setNavigationBarTitle({
+                title:res.data.busStopDescription
+              });
+
+              // Make bus service is unique 
+              var busServiceIdArray = [];
+              for (var i = 0; i < busArray.length; i++) {
+                if(busServiceIdArray.indexOf(busArray[i]) < 0){ 
+                  busServiceIdArray.push(busArray[i]);
+                }
+              }
+              that.updateBusArrivalTime(busStopId,busServiceIdArray);
+            }else {
+              wx.setNavigationBarTitle({
+                title:"Unknown Stop"
+              });
+
+              app.hideLoadingWindow();
+            }
+
+          }
+        });
+
+    }
+
+
 
   },
 
@@ -211,14 +231,33 @@ Page({
 
 
                 }
-                var busTime = {busServiceId:busServiceId,firstNextTime:at[0],secondNextTime:at[1]};
-                busTimeTempArray.push(busTime);
+
+                
+                if(that.data.busTimeArray.length > 0){  // 说明已经加载过的，就局部刷新时间
+                  for (var k = 0; k < that.data.busTimeArray.length; k++) {
+                    var busTimeObject = that.data.busTimeArray[k];
+                    if(busTimeObject.busServiceId == busServiceId){
+                      busTimeObject.firstNextTime = at[0];
+                      busTimeObject.secondNextTime = at[1];
+                    }
+                  }
+                }else { // 如果没有加载过的就加进去数组
+                  var busTime = {busServiceId:busServiceId,firstNextTime:at[0],secondNextTime:at[1]};
+                  busTimeTempArray.push(busTime);
+                }
+                
               }
             }
 
-            that.setData({
-              busTimeArray:busTimeTempArray
-            });
+            if(that.data.busTimeArray.length == 0){
+              that.setData({
+                busTimeArray:busTimeTempArray
+              });
+            }else {
+              that.setData({
+                busTimeArray:that.data.busTimeArray
+              });
+            }
             app.hideLoadingWindow();
           }
         })
