@@ -1,10 +1,11 @@
-<!--index.wxml-->
-<view class="container">
-  <view  bindtap="bindViewTap" class="userinfo">
-    <image class="userinfo-avatar" src="{{userInfo.avatarUrl}}" background-size="cover"></image>
-    <text class="userinfo-nickname">{{userInfo.nickName}}</text>
+<view class="index">
+  <view class="index-hd">
+    <!--<image class="index-logo" src="resources/kind/logo.png"></image>-->
+    <view class="index-desc" >此小程序是趁宝宝睡觉的时候 挑灯夜战完成的 如果你觉得对你有用 那我的目的就达到了。如果你在Java，web前端（HTML5，CSS3，各种JS框架）， IOS开发，想与我交流 请加我微信fengg5241。</view>
+	<view class="index-desc" >俗话说：穷则独善其身，达则兼济天下，为了早日甩掉贫穷的帽子，去兼济天下，请各位亲不要吝啬，尽情打赏。
+	2元钱你买不了吃亏，2块钱你买不了上当，但却是奶爸完善程序的动力。 </view>
+
+    <image  src="/image/pay.png"></image>
   </view>
-  <view class="usermotto">
-    <text class="user-motto">{{motto}}</text>
-  </view>
+
 </view>

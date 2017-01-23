@@ -21,7 +21,7 @@ Page({
       numIndex: 0,
       directionDropdownShowFlag: false,
       busStopDropdownShowFlag:false,
-      submitDisabled:false
+      submitDisabled:e.detail.value == ""
     });
   },
 

@@ -83,39 +83,74 @@ Page({
     // busTime:{busNo,firstNextTime,secondNextTime}
     currentStopId:null,
     currentStopDesc:"",
-    busTimeArray: []
+    busTimeArray: [],
+    latitude:null,
+    longitude:null,
+    favoriteFlag:false,
+    markers: [{
+      iconPath: "/image/location.png",
+      id: 0,
+      latitude: null,
+      longitude: null,
+      width: 50,
+      height: 50
+    }],
   },
   onLoad: function (options) {
     
     this.setData({
       currentStopId: options.busStopId
     });
+
+    
     // 动态显示title根据stop name
     if(options.busStopDesc != null){
-      wx.setNavigationBarTitle({
-        title:options.busStopDesc
-      });
 
       this.setData({
         currentStopDesc: options.busStopDesc
       });
     }
 
+    this.showFavoriteStatus(options.busStopId);
 
     this.getBusArrivalTime(options.busStopId,options.busStopDesc,options.busServiceId,true);
   },
-  kindToggle: function (e) {
-    var id = e.currentTarget.id, list = this.data.list;
-    for (var i = 0, len = list.length; i < len; ++i) {
-      if (list[i].id == id) {
-        list[i].open = !list[i].open
-      } else {
-        list[i].open = false
+
+  showFavoriteStatus: function(stopId){
+    try {
+      var favoriteObject = wx.getStorageSync('favorite')
+      if (favoriteObject && favoriteObject[stopId]) {
+          this.setData({
+            favoriteFlag:true
+          });
+      }else {
+        this.setData({
+          favoriteFlag:false
+        });
+      }
+    } catch (e) {
+      
+    }
+  },
+
+  toggleFavoriteFlag: function(){
+    this.setData({
+      favoriteFlag:!this.data.favoriteFlag
+    });
+
+    var favoriteObject = wx.getStorageSync('favorite');
+    if(this.data.favoriteFlag){
+      if(!favoriteObject){
+        favoriteObject = {};
+      }
+      favoriteObject[this.data.currentStopId] = this.data.currentStopDesc;
+    }else {
+      if(favoriteObject && favoriteObject[this.data.currentStopId]){
+        delete favoriteObject[this.data.currentStopId];
       }
     }
-    this.setData({
-      list: list
-    });
+
+    wx.setStorageSync('favorite', favoriteObject);
   },
 
   refreshBusTime: function (e){
@@ -142,8 +177,21 @@ Page({
           success: function(res) {
             var busArray = res.data.buses;
             if(busArray != null){
-              wx.setNavigationBarTitle({
-                title:res.data.busStopDescription
+              that.setData({
+                currentStopDesc: res.data.busStopDescription
+              });
+
+              that.setData({
+                latitude:res.data.latitude,
+                longitude:res.data.longitude,
+                markers:[{
+                  iconPath: "/image/location.png",
+                  id: 0,
+                  latitude: res.data.latitude,
+                  longitude: res.data.longitude,
+                  width: 50,
+                  height: 50
+                }]
               });
 
               // Make bus service is unique 
@@ -155,10 +203,9 @@ Page({
               }
               that.updateBusArrivalTime(busStopId,busServiceIdArray);
             }else {
-              wx.setNavigationBarTitle({
-                title:"Unknown Stop"
+              that.setData({
+                currentStopDesc: "Unknown Stop"
               });
-
               app.hideLoadingWindow();
             }
 

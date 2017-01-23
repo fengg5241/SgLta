@@ -8,3 +8,10 @@
 .page-head{
 	padding: 0rpx 50rpx 0rpx;
 }
+
+button[type="primary"],button.button-hover[type="primary"]{
+	background-color:#6495ED;
+}
+button[disabled][type="primary"]{
+	background-color:#B0C4DE;
+}
