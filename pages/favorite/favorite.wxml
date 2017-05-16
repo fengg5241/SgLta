@@ -16,4 +16,14 @@
         </view>
       </block>
     </view>
+
+    
+    <view class="index" wx:if="{{favoriteStopArray.length == 0}}">
+		<view class="index-hd">
+		
+		You have not choosed any favorite bus stop!
+		</view>
+    </view>
+    
+    
 </view>

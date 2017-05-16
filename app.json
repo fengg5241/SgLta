@@ -10,15 +10,21 @@
     "list": [
       {
         "pagePath": "pages/favorite/favorite",
-        "text": "Favorites"
+        "text": "Favorites",
+        "iconPath": "image/favorite.png",
+      	"selectedIconPath": "image/favorite-selected.png"
       },
       {
         "pagePath": "pages/busSearch/busSearch",
-        "text": "search"
+        "text": "search",
+        "iconPath": "image/search.png",
+      	"selectedIconPath": "image/search-selected.png"
       },
       {
         "pagePath": "pages/index/index",
-        "text": "About Me"
+        "text": "About Me",
+        "iconPath": "image/service.png",
+      	"selectedIconPath": "image/service-selected.png"
       }
     ]
   },
